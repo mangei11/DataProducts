@@ -1,0 +1,143 @@
+---
+title       : "Disk Measurements"
+subtitle    : "Bias and Uncertainties from Coordinate-Based data"
+author      : "mangei11"
+job         : 
+framework   : html5slides   # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Disk Measurements
+
+Motivation
+* Determine diameter, cross-sectional area, and coordinates of center location from small number of points on disk perimeter
+* Prediction performance for a given number of noisy measurement points?
+* Effect of the number of measurement points?
+* Effect of the noise level in the measurements?
+
+--- .class #id
+
+## Example
+```{r input, echo=FALSE}
+rm(list=ls())
+# hard wired constants
+diam_true <- 2
+center_true <- c(0,0)
+set.seed(2323)
+# input parameters
+npnt <- 12
+relsd <- 0.05
+```
+Given: `r npnt` measurement points, `r relsd*100`% noise 
+
+```{r data_simulation, echo=FALSE,fig.asp=1, fig.height=10}
+nboot <- 1
+gendat <- function(n,relsd){
+        sd <- diam_true*relsd
+        phi <- matrix(runif(n*nboot, min=0, max=2.*pi),nrow=nboot)
+        nx <- matrix(rnorm(n*nboot, sd=sd),nrow=nboot)
+        ny <- matrix(rnorm(n*nboot, sd=sd),nrow=nboot)
+        x <- center_true[1] + diam_true/2*cos(phi) + nx
+        y <- center_true[2] + diam_true/2*sin(phi) + ny
+        list(x=x, y=y)
+        }
+dat <- gendat(n=12, relsd=0.05)
+plot(x=dat$x[1,], y=dat$y[1,], xlab="x", ylab="y", main="Data", col="red", pch=19, cex=2)
+points(center_true[1],center_true[2], col="blue",pch=3,cex=2)
+```
+
+--- .class #id
+
+## ShinyApp Functionality
+
+
+Input parameters:
+* Number of measurement points
+* Noise (standard deviation of normal noise, relative to true disk diameter)
+
+Output results:     
+* Estimates of expected values, standard deviation, bias, rmse
+* Histograms of simulated results
+
+--- .class #id
+## Equations for Estimation
+
+Coordinates of center location:
+$$\left(\hat{x}_c,\hat{y}_c\right) = \left(\frac{1}{n}\sum_{i=1}^{n}{x_i},\frac{1}{n}\sum_{i=1}^{n}{y_i}\right)$$
+Disk Diameter:
+$$\hat{d} = \frac{2}{n}\sum_{i=1}^{n}{\sqrt{\left(x_i-\hat{x}_c\right)^2
++\left(y_i-\hat{y}_c \right)^2} }$$
+Center offset (true center $\left(x_c,y_c\right)$):
+$$\hat{r}_c = \sqrt{\left(\hat{x}_c-x_c\right)^2
++\left(\hat{y}_c-y_c\right)^2} $$
+
+--- . class #id
+
+##  Simulations (for `r npnt` measurement points, `r relsd*100`% noise)
+```{r nboot, echo=FALSE}
+nboot <- 1000
+```
+
+Statistics based `r nboot` bootstrap simulations; results as {expectation, stdev, bias, rmse}
+
+```{r histcalc, echo=FALSE}
+# function to predict center location
+center <- function(x,y){ c(mean(x),mean(y))}
+
+# function to predicted the diameter from the x-y data
+diam <- function(x,y){ 
+        cent <- center(x,y)
+        2 * mean(sqrt((x-cent[1])^2 + (y-cent[2])^2))
+}
+
+# function to predict the area relative to the true area
+area_rel <- function(diam){ diam^2/diam_true^2 } 
+
+# distance between true and predicted center location
+dist_center <- function(center) { sqrt( sum( (center-center_true)^2) )}
+
+# simulation and analysis function 
+resvecall <- function(n,relsd){
+        dat <- gendat(n, relsd)
+        cent1 <- center(dat$x[1,],dat$y[1,])
+        for (i in 1:nboot){
+                cent <- center(dat$x[i,],dat$y[i,])
+                d <- diam(dat$x[i,],dat$y[i,])
+                a <- area_rel(d)
+                dist <- dist_center(cent)
+                resi <- data.frame(diameter=d/diam_true, 
+                                   area=a, dcenter=dist/diam_true)
+                if (i == 1) {
+                        statdat <- resi
+                } else {
+                        statdat <- rbind(statdat,resi)
+                }
+        }
+        # compute mean, standard deviation, and bias
+        means <- sapply(statdat,mean)
+        sdev <- sapply(statdat, sd)
+        bias <- means - c(1, 1, 0) 
+                # subtract the true values from the means
+        rmse <- sqrt(sdev^2+bias^2)
+        list(x1=dat$x[1,], y1=dat$y[1,], simdat = statdat, 
+                means=as.list(means), sdev=as.list(sdev), 
+                bias = as.list(bias), rmse = as.list(rmse))
+}
+res <- resvecall(n=12, relsd=0.05)
+``` 
+
+* Rel. Diameter $D/D_{true}:$ {`r round(res$means$diameter,3)`, `r round(res$sdev$diameter,3)`, `r round(res$bias$diameter,3)`, `r round(res$rmse$diameter,3)`}
+* Rel. Offset $r/D_{true}:$ {`r round(res$means$dcenter,3)`, `r round(res$sdev$dcenter,3)`, `r round(res$bias$dcenter,3)`, `r round(res$rmse$dcenter,3)`}
+
+```{r histplot, echo=FALSE, fig.width=11, fig.height=5}
+res <- res
+par(mfrow = c(1,2)) #, mar = c(5,4,2,1))
+hist(res$simdat$diameter, xlab="relative diameter", 
+                     main="Diameters")
+hist(res$simdat$dcenter, xlab="relative distance", 
+                     main="Center-Offset Distances")
+```

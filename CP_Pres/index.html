@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>Disk Measurements</title>
+	<meta name="description" content="Disk Measurements">
+	<meta name="author" content="mangei11">
+	<meta name="generator" content="slidify" />
+	
+	<!-- LOAD STYLE SHEETS -->
+	<link rel="stylesheet" href="libraries/frameworks/html5slides/default/styles.css">
+	<link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />  <link rel="stylesheet" href = "assets/css/ribbons.css">
+  
+</head>
+<body style='display: none'>
+	<section class='slides layout-regular template-regular'>
+     <article class="" id="slide-1" style="background:;">
+  <h3>Disk Measurements</h3>
+  <p>Motivation</p>
+
+<ul>
+<li>Determine diameter, cross-sectional area, and coordinates of center location from small number of points on disk perimeter</li>
+<li>Prediction performance for a given number of noisy measurement points?</li>
+<li>Effect of the number of measurement points?</li>
+<li>Effect of the noise level in the measurements?</li>
+</ul>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>Example</h3>
+  <p>Given: 12 measurement points, 5% noise </p>
+
+<p><img src="assets/fig/data_simulation-1.png" alt="plot of chunk data_simulation"></p>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>ShinyApp Functionality</h3>
+  <p>Input parameters:</p>
+
+<ul>
+<li>Number of measurement points</li>
+<li>Noise (standard deviation of normal noise, relative to true disk diameter)</li>
+</ul>
+
+<p>Output results:     </p>
+
+<ul>
+<li>Estimates of expected values, standard deviation, bias, rmse</li>
+<li>Histograms of simulated results</li>
+</ul>
+
+</article>
+
+<article class="class" id="id" style="background:;">
+  <h3>Equations for Estimation</h3>
+  <p>Coordinates of center location:
+\[\left(\hat{x}_c,\hat{y}_c\right) = \left(\frac{1}{n}\sum_{i=1}^{n}{x_i},\frac{1}{n}\sum_{i=1}^{n}{y_i}\right)\]
+Disk Diameter:
+\[\hat{d} = \frac{2}{n}\sum_{i=1}^{n}{\sqrt{\left(x_i-\hat{x}_c\right)^2
++\left(y_i-\hat{y}_c \right)^2} }\]
+Center offset (true center \(\left(x_c,y_c\right)\)):
+\[\hat{r}_c = \sqrt{\left(\hat{x}_c-x_c\right)^2
++\left(\hat{y}_c-y_c\right)^2} \]</p>
+
+</article>
+
+<article class="" id="id" style="background:;">
+  <h3>Simulations (for 12 measurement points, 5% noise)</h3>
+  <p>Statistics based 1000 bootstrap simulations; results as {expectation, stdev, bias, rmse}</p>
+
+<ul>
+<li>Rel. Diameter \(D/D_{true}:\) {0.944, 0.066, -0.056, 0.087}</li>
+<li>Rel. Offset \(r/D_{true}:\) {0.13, 0.067, 0.13, 0.146}</li>
+</ul>
+
+<p><img src="assets/fig/histplot-1.png" alt="plot of chunk histplot"></p>
+
+</article>
+
+  </section>
+</body>
+  <!-- LOAD JAVASCRIPTS  -->
+	<script src='libraries/frameworks/html5slides/default/slides.js'></script>
+	<!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+	<script type="text/x-mathjax-config">
+	  MathJax.Hub.Config({
+	    tex2jax: {
+	      inlineMath: [['$','$'], ['\\(','\\)']],
+	      processEscapes: true
+	    }
+	  });
+	</script>
+	<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+	<!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+	</script> -->
+	<script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<!-- LOAD HIGHLIGHTER JS FILES -->
+	<script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+	<script>hljs.initHighlightingOnLoad();</script>
+	<!-- DONE LOADING HIGHLIGHTER JS FILES -->
+	 
+	</html>
